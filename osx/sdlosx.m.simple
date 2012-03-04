@@ -1,0 +1,13 @@
+
+#import <Cocoa/Cocoa.h>
+#import <sys/param.h> /* for MAXPATHLEN */
+#import <unistd.h>
+
+
+void sdl_osx_entry_point() {
+    NSAutoreleasePool	*pool = [[NSAutoreleasePool alloc] init];
+    //SDLMain				*sdlMain;
+
+    /* Ensure the application object is initialised */
+    [NSApplication sharedApplication];
+}
