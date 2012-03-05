@@ -660,6 +660,9 @@ ___result = r;
            (string-append "key-unknown-"
                           (number->string key-enum)))))))
 
+;; TODO
+(define (sdl::symbol->keysym-sym symbol) symbol)
+
 (define (sdl::event-key-symbol event)
   (sdl::keysym-sym->symbol
    (sdl::event-key-keysym-sym event)))
