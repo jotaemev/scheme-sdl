@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Find out script's dir, resolving any links to the script itself
 SOURCE="${BASH_SOURCE[0]}"

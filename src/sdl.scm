@@ -11,6 +11,14 @@
 #include "SDL_keysym.h"
 #include "SDL_events.h"
 
+#ifndef FALSE
+#define FALSE (0)
+#endif
+
+#ifndef TRUE
+#define TRUE (!FALSE)
+#endif
+
 #ifdef __APPLE__
 #include "osx-sdl.h"
 #endif
@@ -281,10 +289,10 @@ ___U16 _g_pressed_keys[325];
 ___BOOL r = SDL_PollEvent(&_g_event);
 switch( _g_event.type ){
   case SDL_KEYDOWN:
-    _g_pressed_keys[_g_event.key.keysym.sym] = true;
+    _g_pressed_keys[_g_event.key.keysym.sym] = TRUE;
   break;
   case SDL_KEYUP:
-    _g_pressed_keys[_g_event.key.keysym.sym] = false;
+    _g_pressed_keys[_g_event.key.keysym.sym] = FALSE;
   break;
   default:
   break;
