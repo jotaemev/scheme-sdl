@@ -297,6 +297,9 @@ int _g_pressed_buttons[5];
 ;;; Check if there is a new event, while saving it in a global variable and other
 ;;; global state variables
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;; <- MERGE AND RETURN VALUES
+
 (define sdl::events-next?
   (c-lambda ()
             bool
