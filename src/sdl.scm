@@ -707,7 +707,7 @@ ___result = r;
 
 (define (sdl::event-key-modifiers event)
   (sdl::key-modifiers->symbol-list
-   (sdl::event-keysym-key-modifiers event)))
+   (sdl::event-key-keysym-modifiers event)))
 
 ;-------------------------------------------------------------------------------
 ; Display
