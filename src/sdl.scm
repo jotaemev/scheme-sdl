@@ -12,6 +12,14 @@ gg;; Copyright (c) 2012, Alvaro Castro-Castilla.
 #include "SDL_events.h"
 #include "SDL_keyboard.h"
 
+#ifndef FALSE
+#define FALSE (0)
+#endif
+
+#ifndef TRUE
+#define TRUE (!FALSE)
+#endif
+
 #ifdef __APPLE__
 #include "osx-sdl.h"
 #endif
@@ -296,10 +304,10 @@ int _g_pressed_buttons[5];
 ___BOOL r = SDL_PollEvent(&_g_event);
 switch( _g_event.type ){
   case SDL_KEYDOWN:
-    _g_pressed_keys[_g_event.key.keysym.sym] = true;
+    _g_pressed_keys[_g_event.key.keysym.sym] = TRUE;
   break;
   case SDL_KEYUP:
-    _g_pressed_keys[_g_event.key.keysym.sym] = false;
+    _g_pressed_keys[_g_event.key.keysym.sym] = FALSE;
   break;
   case SDL_MOUSEBUTTONDOWN:
     _g_pressed_buttons[_g_event.button.button] = true;
@@ -765,7 +773,7 @@ ___result = state[___arg1];
 
 (define (sdl::event-key-modifiers event)
   (sdl::key-modifiers->symbol-list
-   (sdl::event-keysym-key-modifiers event)))
+   (sdl::event-key-keysym-modifiers event)))
 
 ;-------------------------------------------------------------------------------
 ; Display
