@@ -6,4 +6,6 @@ while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 cd $DIR/../src
+
+if [[ ! -z `ls *.o[0-9] 2> /dev/null` ]]; then rm *.o[0-9]; fi
 gsc -e '(compile-file "sdl" cc-options: "-w -I/usr/include/SDL" ld-options: "-lSDL")'

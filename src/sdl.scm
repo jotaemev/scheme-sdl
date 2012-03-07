@@ -1,4 +1,4 @@
-;; Copyright (c) 2012, Alvaro Castro-Castilla.
+gg;; Copyright (c) 2012, Alvaro Castro-Castilla.
 ;; Inspired by Kenneth Dickey's SDL bindings
 
 ;-------------------------------------------------------------------------------
@@ -10,6 +10,7 @@
 #include "SDL.h"
 #include "SDL_keysym.h"
 #include "SDL_events.h"
+#include "SDL_keyboard.h"
 
 #ifdef __APPLE__
 #include "osx-sdl.h"
@@ -241,11 +242,24 @@ end-of-c-declare
   (c-lambda () unsigned-int32
             "SDL_GetTicks"))
 (define sdl::lock-surface
-    (c-lambda ((pointer "SDL_Surface")) bool
-              "SDL_LockSurface"))
+  (c-lambda ((pointer "SDL_Surface")) bool
+            "SDL_LockSurface"))
 (define sdl::unlock-surface
-    (c-lambda ((pointer "SDL_Surface")) void
-              "SDL_UnlockSurface"))
+  (c-lambda ((pointer "SDL_Surface")) void
+            "SDL_UnlockSurface"))
+(define sdl::show-cursor
+  (c-lambda (int)
+            int
+            "SDL_ShowCursor"))
+(define sdl::pump-events
+  (c-lambda ()
+            void
+            "SDL_PumpEvents"))
+(define sdl::event-state
+  (c-lambda (unsigned-int8 int)
+            void
+            "SDL_EventState"))
+
 
 
 
@@ -269,6 +283,7 @@ end-of-c-declare
 (c-declare "
 SDL_Event _g_event;
 ___U16 _g_pressed_keys[325];
+int _g_pressed_buttons[5];
 ")
 
 ;;; Check if there is a new event, while saving it in a global variable and other
@@ -286,6 +301,12 @@ switch( _g_event.type ){
   case SDL_KEYUP:
     _g_pressed_keys[_g_event.key.keysym.sym] = false;
   break;
+  case SDL_MOUSEBUTTONDOWN:
+    _g_pressed_buttons[_g_event.button.button] = true;
+  break;
+  case SDL_MOUSEBUTTONUP:
+    _g_pressed_buttons[_g_event.button.button] = false;
+  break;
   default:
   break;
 }
@@ -298,6 +319,19 @@ ___result = r;
   (c-lambda ()
             sdl::event
             "___result_voidstar = &_g_event;"))
+
+;;; Wait and get envent
+
+;;; Return error and event
+;; (define sdl::wait-event
+;;     (c-lambda ()
+;;               sdl::event
+;;               "
+;; SDL_WaitEvent(&_g_event);
+;; ___result_voidstar = &_g_event;
+;; "))
+
+;;; TODO: Wait event with timeout
 
 ;;; Get the event type
 
@@ -319,6 +353,17 @@ ___result = r;
 ;-------------------------------------------------------------------------------
 ; Mouse events
 ;-------------------------------------------------------------------------------
+
+;;; Check whether a mouse button is pressed
+
+(define sdl::mouse-pressed?
+  (lambda (button)
+    (let recur ()
+      (if (sdl::events-next?)
+          (recur)))
+    ((c-lambda (int)
+               bool
+               "___result = _g_pressed_buttons[___arg1];") button)))
 
 (define sdl::event-move-state
   (make-field-ref sdl::event* unsigned-int8  "motion.state"))
@@ -358,12 +403,26 @@ ___result = r;
       ;; unknown
       (else value))))
 
+;;; Globals for handling events with Scheme environment
+
+(c-declare "
+int _g_mouse_x;
+int _g_mouse_y;
+")
+
+(define (sdl::get-mouse-state)
+  ((c-lambda () void "SDL_GetMouseState(&_g_mouse_x, &_g_mouse_y);"))
+  (values
+   ((c-lambda () int "___result = _g_mouse_x;"))
+   ((c-lambda () int "___result = _g_mouse_y;"))))
+
 ;-------------------------------------------------------------------------------
 ; Key events
 ;-------------------------------------------------------------------------------
 
 ;;; Check whether the given key-coded key is pressed
 ;;; ___arg1 (int) : key code
+;;; TODO: Should be done with SDL_GetKeyState(NULL)
 
 (define sdl::key-pressed?
   (lambda (key)
@@ -373,7 +432,14 @@ ___result = r;
     ((c-lambda (int)
                bool
                "___result = _g_pressed_keys[___arg1];") key)))
-
+#;
+(define sdl::key-pressed?
+  (c-lambda (int)
+            bool
+            "
+Uint8 *state = SDL_GetKeyState(NULL);
+___result = state[___arg1];
+"))
 ;;; Event fields and subfields
 
 (define sdl::event-key
