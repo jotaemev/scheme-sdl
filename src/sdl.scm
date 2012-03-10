@@ -298,7 +298,7 @@ int _g_pressed_buttons[5];
 ;;; global state variables
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;; <- MERGE AND RETURN VALUES
+;;;;;;;;;;;;;;;;;;;;;;;;; <- MERGE WITH EVENTS-GET AND RETURN VALUES
 
 (define sdl::events-next?
   (c-lambda ()
@@ -324,12 +324,25 @@ switch( _g_event.type ){
 ___result = r;
 "))
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; IMPORTANT: Currently the latest event doesn't get consumed
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ;;; Get the currently available event
 
 (define sdl::events-get
   (c-lambda ()
             sdl::event
             "___result_voidstar = &_g_event;"))
+
+;;; Get the current event, discarding the rest of the queue
+
+(define (sdl::events-get-next)
+  (let recur ()
+    (if (sdl::events-next?)
+        (recur)))
+  (sdl::events-get))
 
 ;;; Wait and get envent
 
@@ -749,15 +762,15 @@ ___result = state[___arg1];
 (define sdl::key-modifiers->symbol-list
   (let ((bits-and-names
          (list
-          (cons sdl::keymod-left-shift    'keymod-left-shift   )
-          (cons sdl::keymod-right-shift   'keymod-right-shift  )
-          (cons sdl::keymod-left-control  'keymod-left-control )
+          (cons sdl::keymod-left-shift    'keymod-left-shift)
+          (cons sdl::keymod-right-shift   'keymod-right-shift)
+          (cons sdl::keymod-left-control  'keymod-left-control)
           (cons sdl::keymod-right-control 'keymod-right-control)
-          (cons sdl::keymod-left-alt      'keymod-left-alt  )
-          (cons sdl::keymod-right-alt     'keymod-right-alt )
-          (cons sdl::keymod-left-meta     'keymod-left-meta )
+          (cons sdl::keymod-left-alt      'keymod-left-alt)
+          (cons sdl::keymod-right-alt     'keymod-right-alt)
+          (cons sdl::keymod-left-meta     'keymod-left-meta)
           (cons sdl::keymod-right-meta    'keymod-right-meta)
-          (cons sdl::keymod-num           'keymod-num )
+          (cons sdl::keymod-num           'keymod-num)
           (cons sdl::keymod-caps          'keymod-caps)
           (cons sdl::keymod-mode          'keymod-mode)))
         (bit  car)
@@ -766,7 +779,8 @@ ___result = state[___arg1];
       (let ((bit-set?
              (lambda (bit)
                (not (zero? (bitwise-and bit keymods))))))
-        (let loop ( [data bits-and-names] [modifiers '()] )
+        (let loop ((data bits-and-names)
+                   (modifiers '()))
           (cond
            ((null? data) modifiers)     ; done
            ((bit-set? (bit (car data)))
