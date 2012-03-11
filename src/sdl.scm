@@ -283,35 +283,28 @@ end-of-c-declare
     ,(string-append "___result = ___arg1->" field-name ";")))
 
 ;-------------------------------------------------------------------------------
-; Raw events
+; Raw events and Global variables setup
 ;-------------------------------------------------------------------------------
 
 ;;; Globals for handling events with Scheme environment
 
 (c-declare "
 SDL_Event _g_event;
-___U16 _g_pressed_keys[325];
 int _g_pressed_buttons[5];
+// This array is valid for the entire life of the application, but it needs
+// to be updated using SDL_PumpEvents
+Uint8 *_g_key_states = SDL_GetKeyState(NULL);
 ")
 
-;;; Check if there is a new event, while saving it in a global variable and other
-;;; global state variables
+;;; Poll events: (are there more events?, current event)
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;; <- MERGE WITH EVENTS-GET AND RETURN VALUES
-
-(define sdl::events-next?
-  (c-lambda ()
-            bool
-            "
+(define (sdl::poll-event)
+  (define events-next?
+    (c-lambda ()
+              bool
+              "
 ___BOOL r = SDL_PollEvent(&_g_event);
 switch( _g_event.type ){
-  case SDL_KEYDOWN:
-    _g_pressed_keys[_g_event.key.keysym.sym] = TRUE;
-  break;
-  case SDL_KEYUP:
-    _g_pressed_keys[_g_event.key.keysym.sym] = FALSE;
-  break;
   case SDL_MOUSEBUTTONDOWN:
     _g_pressed_buttons[_g_event.button.button] = true;
   break;
@@ -323,39 +316,24 @@ switch( _g_event.type ){
 }
 ___result = r;
 "))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; IMPORTANT: Currently the latest event doesn't get consumed
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;;; Get the currently available event
-
-(define sdl::events-get
-  (c-lambda ()
-            sdl::event
-            "___result_voidstar = &_g_event;"))
-
-;;; Get the current event, discarding the rest of the queue
-
-(define (sdl::events-get-next)
-  (let recur ()
-    (if (sdl::events-next?)
-        (recur)))
-  (sdl::events-get))
+  (define events-get
+    (c-lambda ()
+              sdl::event
+              "
+___result_voidstar = &_g_event;
+"))
+  (values (events-next?)
+          (events-get)))
 
 ;;; Wait and get envent
 
-;;; Return error and event
-;; (define sdl::wait-event
-;;     (c-lambda ()
-;;               sdl::event
-;;               "
-;; SDL_WaitEvent(&_g_event);
-;; ___result_voidstar = &_g_event;
-;; "))
-
-;;; TODO: Wait event with timeout
+(define sdl::wait-event
+  (c-lambda ()
+            sdl::event
+            "
+SDL_WaitEvent(&_g_event);
+___result_voidstar = &_g_event;
+"))
 
 ;;; Get the event type
 
@@ -382,12 +360,23 @@ ___result = r;
 
 (define sdl::mouse-pressed?
   (lambda (button)
-    (let recur ()
-      (if (sdl::events-next?)
-          (recur)))
     ((c-lambda (int)
                bool
-               "___result = _g_pressed_buttons[___arg1];") button)))
+               "
+// Get the first mouse event from the event queue, consuming the event
+SDL_PeepEvents(&_g_event, 1, SDL_GETEVENT, (SDL_EVENTMASK (SDL_MOUSEBUTTONDOWN) | SDL_EVENTMASK (SDL_MOUSEBUTTONUP)));
+switch( _g_event.type ){
+  case SDL_MOUSEBUTTONDOWN:
+    _g_pressed_buttons[_g_event.button.button] = true;
+  break;
+  case SDL_MOUSEBUTTONUP:
+    _g_pressed_buttons[_g_event.button.button] = false;
+  break;
+  default:
+  break;
+}
+___result = _g_pressed_buttons[___arg1];
+") button)))
 
 (define sdl::event-move-state
   (make-field-ref sdl::event* unsigned-int8  "motion.state"))
@@ -427,6 +416,15 @@ ___result = r;
       ;; unknown
       (else value))))
 
+(define (sdl::mouse-button->button-num name)
+  (case name
+    ((left) 1)
+    ((middle) 2)
+    ((right) 3)
+    ((wheel-up) 4)
+    ((wheel-down) 5)
+    (else (error "Unknown mouse button"))))
+
 ;;; Globals for handling events with Scheme environment
 
 (c-declare "
@@ -444,26 +442,25 @@ int _g_mouse_y;
 ; Key events
 ;-------------------------------------------------------------------------------
 
-;;; Check whether the given key-coded key is pressed
-;;; ___arg1 (int) : key code
-;;; TODO: Should be done with SDL_GetKeyState(NULL)
+(define (sdl::key-events)
+  #f)
 
-(define sdl::key-pressed?
-  (lambda (key)
-    (let recur ()
-      (if (sdl::events-next?)
-          (recur)))
-    ((c-lambda (int)
-               bool
-               "___result = _g_pressed_keys[___arg1];") key)))
-#;
+(define sdl::key-state
+  (c-lambda (int)
+            bool
+            "
+SDL_PumpEvents();
+___result = _g_key_states[___arg1];
+"))
+
 (define sdl::key-pressed?
   (c-lambda (int)
             bool
             "
-Uint8 *state = SDL_GetKeyState(NULL);
-___result = state[___arg1];
+SDL_PumpEvents();
+___result = _g_key_states[___arg1];
 "))
+
 ;;; Event fields and subfields
 
 (define sdl::event-key
@@ -793,7 +790,7 @@ ___result = state[___arg1];
    (sdl::event-key-keysym-modifiers event)))
 
 ;-------------------------------------------------------------------------------
-; Display
+; Video
 ;-------------------------------------------------------------------------------
 
 ;;; Set clip area
