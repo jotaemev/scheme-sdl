@@ -750,10 +750,6 @@ ___result = _g_key_states[___arg1];
 ;; TODO
 (define (sdl::symbol->keysym-sym symbol) symbol)
 
-(define (sdl::event-key-symbol event)
-  (sdl::keysym-sym->symbol
-   (sdl::event-key-keysym-sym event)))
-
 ;;; Key modifiers
 
 (define sdl::key-modifiers->symbol-list
