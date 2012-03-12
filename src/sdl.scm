@@ -1,4 +1,4 @@
-gg;; Copyright (c) 2012, Alvaro Castro-Castilla.
+;; Copyright (c) 2012, Alvaro Castro-Castilla.
 ;; Inspired by Kenneth Dickey's SDL bindings
 
 ;-------------------------------------------------------------------------------
@@ -293,7 +293,7 @@ SDL_Event _g_event;
 int _g_pressed_buttons[5];
 // This array is valid for the entire life of the application, but it needs
 // to be updated using SDL_PumpEvents
-Uint8 *_g_key_states = SDL_GetKeyState(NULL);
+Uint8 *_g_key_states; // = SDL_GetKeyState(NULL);
 ")
 
 ;;; Poll events: (are there more events?, current event)
@@ -449,6 +449,7 @@ int _g_mouse_y;
   (c-lambda (int)
             bool
             "
+_g_key_states = SDL_GetKeyState(NULL);
 SDL_PumpEvents();
 ___result = _g_key_states[___arg1];
 "))
@@ -457,6 +458,7 @@ ___result = _g_key_states[___arg1];
   (c-lambda (int)
             bool
             "
+_g_key_states = SDL_GetKeyState(NULL);
 SDL_PumpEvents();
 ___result = _g_key_states[___arg1];
 "))
