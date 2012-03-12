@@ -306,10 +306,10 @@ Uint8 *_g_key_states = SDL_GetKeyState(NULL);
 ___BOOL r = SDL_PollEvent(&_g_event);
 switch( _g_event.type ){
   case SDL_MOUSEBUTTONDOWN:
-    _g_pressed_buttons[_g_event.button.button] = true;
+    _g_pressed_buttons[_g_event.button.button] = TRUE;
   break;
   case SDL_MOUSEBUTTONUP:
-    _g_pressed_buttons[_g_event.button.button] = false;
+    _g_pressed_buttons[_g_event.button.button] = FALSE;
   break;
   default:
   break;
@@ -367,10 +367,10 @@ ___result_voidstar = &_g_event;
 SDL_PeepEvents(&_g_event, 1, SDL_GETEVENT, (SDL_EVENTMASK (SDL_MOUSEBUTTONDOWN) | SDL_EVENTMASK (SDL_MOUSEBUTTONUP)));
 switch( _g_event.type ){
   case SDL_MOUSEBUTTONDOWN:
-    _g_pressed_buttons[_g_event.button.button] = true;
+    _g_pressed_buttons[_g_event.button.button] = TRUE;
   break;
   case SDL_MOUSEBUTTONUP:
-    _g_pressed_buttons[_g_event.button.button] = false;
+    _g_pressed_buttons[_g_event.button.button] = FALSE;
   break;
   default:
   break;
