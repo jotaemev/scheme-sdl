@@ -270,18 +270,6 @@ end-of-c-declare
 
 
 
-
-
-
-
-
-;;; TODO!!! IMPORT
-(define-macro (make-field-ref c-type scheme-type field-name)
-  `(c-lambda
-    (,c-type)
-    ,scheme-type
-    ,(string-append "___result = ___arg1->" field-name ";")))
-
 ;-------------------------------------------------------------------------------
 ; Input
 ;-------------------------------------------------------------------------------
