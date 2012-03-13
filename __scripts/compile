@@ -5,7 +5,7 @@ SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
-cd $DIR/../src
+cd $DIR/..
 
-if [[ ! -z `ls *.o[0-9] 2> /dev/null` ]]; then rm *.o[0-9]; fi
-gsc -e '(compile-file "sdl" cc-options: "-w -I/usr/include/SDL" ld-options: "-lSDL")'
+if [[ ! -z `ls src/*.o[0-9] 2> /dev/null` ]]; then rm src/*.o[0-9]; fi
+gsc -e '(begin (include "/data/projects/scheme-prelude/src/prelude.scm") (include "compiler.scm"))'
