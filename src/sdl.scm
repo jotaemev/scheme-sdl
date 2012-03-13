@@ -283,7 +283,7 @@ end-of-c-declare
     ,(string-append "___result = ___arg1->" field-name ";")))
 
 ;-------------------------------------------------------------------------------
-; Raw events and Global variables setup
+; Input
 ;-------------------------------------------------------------------------------
 
 ;;; Globals for handling events with Scheme environment
@@ -293,8 +293,12 @@ SDL_Event _g_event;
 int _g_pressed_buttons[5];
 // This array is valid for the entire life of the application, but it needs
 // to be updated using SDL_PumpEvents
-Uint8 *_g_key_states; // = SDL_GetKeyState(NULL);
+Uint8 *_g_key_states;
+int _g_mouse_x;
+int _g_mouse_y;
 ")
+
+(c-initialize "_g_key_states = SDL_GetKeyState(NULL);")
 
 ;;; Poll events: (are there more events?, current event)
 
@@ -351,10 +355,6 @@ ___result_voidstar = &_g_event;
 
 (define sdl::event-resize-h
   (make-field-ref sdl::event* int "resize.h"))
-
-;-------------------------------------------------------------------------------
-; Mouse events
-;-------------------------------------------------------------------------------
 
 ;;; Check whether a mouse button is pressed
 
@@ -425,22 +425,11 @@ ___result = _g_pressed_buttons[___arg1];
     ((wheel-down) 5)
     (else (error "Unknown mouse button"))))
 
-;;; Globals for handling events with Scheme environment
-
-(c-declare "
-int _g_mouse_x;
-int _g_mouse_y;
-")
-
 (define (sdl::get-mouse-state)
   ((c-lambda () void "SDL_GetMouseState(&_g_mouse_x, &_g_mouse_y);"))
   (values
    ((c-lambda () int "___result = _g_mouse_x;"))
    ((c-lambda () int "___result = _g_mouse_y;"))))
-
-;-------------------------------------------------------------------------------
-; Key events
-;-------------------------------------------------------------------------------
 
 (define (sdl::key-events)
   #f)
@@ -449,7 +438,6 @@ int _g_mouse_y;
   (c-lambda (int)
             bool
             "
-_g_key_states = SDL_GetKeyState(NULL);
 SDL_PumpEvents();
 ___result = _g_key_states[___arg1];
 "))
@@ -458,7 +446,6 @@ ___result = _g_key_states[___arg1];
   (c-lambda (int)
             bool
             "
-_g_key_states = SDL_GetKeyState(NULL);
 SDL_PumpEvents();
 ___result = _g_key_states[___arg1];
 "))
