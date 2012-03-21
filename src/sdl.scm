@@ -351,8 +351,8 @@ ___result_voidstar = &_g_event;
     ((c-lambda (int)
                bool
                "
-// Get the first mouse event from the event queue, consuming the event
-SDL_PeepEvents(&_g_event, 1, SDL_GETEVENT, (SDL_EVENTMASK (SDL_MOUSEBUTTONDOWN) | SDL_EVENTMASK (SDL_MOUSEBUTTONUP)));
+SDL_PumpEvents();
+SDL_PeepEvents(&_g_event, 0, SDL_PEEKEVENT, (SDL_EVENTMASK (SDL_MOUSEBUTTONDOWN) | SDL_EVENTMASK (SDL_MOUSEBUTTONUP)));
 switch( _g_event.type ){
   case SDL_MOUSEBUTTONDOWN:
     _g_pressed_buttons[_g_event.button.button] = TRUE;
